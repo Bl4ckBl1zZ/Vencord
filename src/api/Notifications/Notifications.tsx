@@ -19,7 +19,7 @@
 import { Settings } from "@api/Settings";
 import { Queue } from "@utils/Queue";
 import { createRoot } from "@webpack/common";
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import type { Root } from "react-dom/client";
 
 import NotificationComponent from "./NotificationComponent";
@@ -59,6 +59,8 @@ export interface NotificationData {
     /** Large image. Optimally, this should be around 16x9 but it doesn't matter much. Desktop Notifications might not support this */
     image?: string;
     onClick?(): void;
+    /** Handle a right click on the in-app notification instead of dismissing it */
+    onContextMenu?(event: MouseEvent<HTMLElement>): void;
     onClose?(): void;
     color?: string;
     /** Whether this notification should not have a timeout */
@@ -67,6 +69,8 @@ export interface NotificationData {
     noPersist?: boolean;
     /** Whether this notification should be dismissed when clicked (defaults to true) */
     dismissOnClick?: boolean;
+    /** Render a non-button root so rich bodies can contain inputs and other controls */
+    interactive?: boolean;
 }
 
 function _showNotification(notification: NotificationData, id: number) {

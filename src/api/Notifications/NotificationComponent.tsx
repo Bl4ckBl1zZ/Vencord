@@ -32,11 +32,13 @@ export default ErrorBoundary.wrap(function NotificationComponent({
     color,
     icon,
     onClick,
+    onContextMenu,
     onClose,
     image,
     permanent,
     className,
     dismissOnClick,
+    interactive,
     position
 }: NotificationData) {
     const notificationSettings = useSettings(["notifications.timeout", "notifications.position"]).notifications;
@@ -65,19 +67,32 @@ export default ErrorBoundary.wrap(function NotificationComponent({
 
     const timeoutProgress = elapsed / timeout;
 
+    const handleClick = () => {
+        onClick?.();
+        if (dismissOnClick !== false)
+            onClose!();
+    };
+    const Root = interactive ? "div" : "button";
+
     return (
-        <button
+        <Root
             className={classes("vc-notification-root", className)}
             style={resolvedPosition === "bottom-right" ? { bottom: "1rem" } : { top: "3rem" }}
-            onClick={() => {
-                onClick?.();
-                if (dismissOnClick !== false)
-                    onClose!();
+            role={interactive ? "button" : undefined}
+            tabIndex={interactive ? 0 : undefined}
+            onClick={handleClick}
+            onKeyDown={e => {
+                if (!interactive || e.target !== e.currentTarget || (e.key !== "Enter" && e.key !== " ")) return;
+                e.preventDefault();
+                handleClick();
             }}
             onContextMenu={e => {
                 e.preventDefault();
                 e.stopPropagation();
-                onClose!();
+                if (onContextMenu)
+                    onContextMenu(e);
+                else
+                    onClose!();
             }}
             onMouseEnter={() => setIsHover(true)}
             onMouseLeave={() => setIsHover(false)}
@@ -117,7 +132,7 @@ export default ErrorBoundary.wrap(function NotificationComponent({
                     style={{ width: `${(1 - timeoutProgress) * 100}%`, backgroundColor: color || "var(--brand-500)" }}
                 />
             )}
-        </button>
+        </Root>
     );
 }, {
     onError: ({ props }) => props.onClose!()
