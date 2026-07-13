@@ -17,6 +17,10 @@ env:
 permissions:
     contents: write
 
+concurrency:
+    group: devbuild-${{ github.ref }}
+    cancel-in-progress: true
+
 jobs:
     Build:
         runs-on: ubuntu-latest
