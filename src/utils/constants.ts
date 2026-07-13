@@ -52,6 +52,11 @@ export const Devs = /* #__PURE__*/ Object.freeze({
         id: 0n,
         badge: false
     },
+    zerohq: {
+        name: "zerohq",
+        id: 0n,
+        badge: false
+    },
     Ven: {
         name: "V",
         id: 343383572805058560n
