@@ -25,7 +25,6 @@ import { addMessageAccessory, removeMessageAccessory } from "@api/MessageAccesso
 import { addMessageDecoration, removeMessageDecoration } from "@api/MessageDecorations";
 import { addMessageClickListener, addMessagePreEditListener, addMessagePreSendListener, removeMessageClickListener, removeMessagePreEditListener, removeMessagePreSendListener } from "@api/MessageEvents";
 import { addMessagePopoverButton, removeMessagePopoverButton } from "@api/MessagePopover";
-import { getPluginFluxTimingListener } from "@api/Performance";
 import { Settings, SettingsStore } from "@api/Settings";
 import { disableStyle, enableStyle } from "@api/Styles";
 import { traceFunction } from "@debug/Tracer";
@@ -166,24 +165,13 @@ export function subscribePluginFluxEvents(p: Plugin, fluxDispatcher: typeof Flux
         logger.debug("Subscribing to flux events of plugin", p.name);
         for (const [event, handler] of Object.entries(p.flux)) {
             const wrappedHandler = p.flux[event] = function () {
-                const timingListener = getPluginFluxTimingListener();
-                const startedAt = timingListener ? performance.now() : 0;
-                let returnedPromise = false;
                 try {
                     const res = handler!.apply(p, arguments as any);
-                    returnedPromise = res instanceof Promise;
                     return res instanceof Promise
                         ? res.catch(e => logger.error(`${p.name}: Error while handling ${event}\n`, e))
                         : res;
                 } catch (e) {
                     logger.error(`${p.name}: Error while handling ${event}\n`, e);
-                } finally {
-                    timingListener?.({
-                        plugin: p.name,
-                        event,
-                        duration: performance.now() - startedAt,
-                        returnedPromise
-                    });
                 }
             };
 

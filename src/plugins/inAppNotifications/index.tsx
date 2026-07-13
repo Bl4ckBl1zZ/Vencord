@@ -146,18 +146,51 @@ function replaceMentions(content: string, message: NotificationMessage) {
         .trim();
 }
 
+function cleanEmbedPreview(content: string, message: NotificationMessage) {
+    return replaceMentions(content, message)
+        .replace(/\[([^\]]+)]\([^)]+\)/g, "$1")
+        .replace(/(^|\s)(?:#{1,6}|>|-)\s+/g, "$1")
+        .replace(/[*_~`]/g, "")
+        .trim();
+}
+
+function getEmbedPreview(message: NotificationMessage) {
+    for (const embed of message.embeds) {
+        const firstField = embed.fields?.[0];
+        const candidate = embed.rawTitle
+            || embed.title
+            || embed.rawDescription
+            || embed.description
+            || firstField?.rawName
+            || firstField?.name
+            || firstField?.rawValue
+            || firstField?.value
+            || embed.author?.name
+            || (embed.provider?.name ? `${embed.provider.name} preview` : undefined);
+
+        if (candidate) {
+            const preview = cleanEmbedPreview(candidate, message);
+            if (preview) return preview;
+        }
+    }
+
+    const count = message.embeds.length;
+    return count === 1 ? "Rich preview" : `${count} rich previews`;
+}
+
 function getPreview(message: NotificationMessage) {
     if (!settings.store.showMessageContent) return "New message";
 
     let preview = replaceMentions(message.content, message);
     const additions: string[] = [];
 
+    if (!preview && message.embeds.length) preview = getEmbedPreview(message);
+
     if (message.attachments.length) {
         const count = message.attachments.length;
         additions.push(`${count} attachment${count === 1 ? "" : "s"}`);
     }
     if (message.sticker_items?.length) additions.push("sticker");
-    if (message.embeds.length && !preview) additions.push("embed");
 
     if (additions.length) preview = [preview, additions.join(" · ")].filter(Boolean).join(" — ");
     if (!preview) preview = "Sent a message";
@@ -610,24 +643,30 @@ function displayNotification(message: NotificationMessage) {
     });
 }
 
-function showTestNotification() {
+function showTestNotifications() {
     const currentUser = UserStore.getCurrentUser();
-    const preview = settings.store.showMessageContent
-        ? "This is how message text and clickable links will look: https://discord.com"
-        : "New message";
-    const context = "Notification preview · #general";
+    const previews = settings.store.showMessageContent
+        ? [
+            "First message in the stack",
+            "Second notification remains visible below it",
+            "Each card has its own hover pause and timer"
+        ]
+        : ["New message", "New message", "New message"];
 
-    showNotification({
-        title: currentUser?.globalName || currentUser?.username || "Message sender",
-        body: `${preview} — ${context}`,
-        richBody: <MessageNotificationBody preview={preview} context={context} />,
-        icon: currentUser?.getAvatarURL(undefined, 128, false),
-        color: "var(--brand-500)",
-        className: "vc-in-app-notification",
-        position: "top-right",
-        forceInApp: true,
-        noPersist: true,
-        interactive: true
+    previews.forEach((preview, index) => {
+        const context = `Notification preview ${index + 1} · #general`;
+        showNotification({
+            title: currentUser?.globalName || currentUser?.username || "Message sender",
+            body: `${preview} — ${context}`,
+            richBody: <MessageNotificationBody preview={preview} context={context} />,
+            icon: currentUser?.getAvatarURL(undefined, 128, false),
+            color: "var(--brand-500)",
+            className: "vc-in-app-notification",
+            position: "top-right",
+            forceInApp: true,
+            noPersist: true,
+            interactive: true
+        });
     });
 }
 
@@ -653,8 +692,8 @@ export default definePlugin({
     },
 
     settingsAboutComponent: () => (
-        <Button onClick={showTestNotification}>
-            Preview notification
+        <Button onClick={showTestNotifications}>
+            Preview notification stack
         </Button>
     )
 });

@@ -17,27 +17,28 @@
 */
 
 import { Settings } from "@api/Settings";
-import { Queue } from "@utils/Queue";
 import { createRoot } from "@webpack/common";
 import type { MouseEvent, ReactNode } from "react";
-import type { Root } from "react-dom/client";
 
 import NotificationComponent from "./NotificationComponent";
 import { persistNotification } from "./notificationLog";
 
-const NotificationQueue = new Queue();
-
-let reactRoot: Root;
 let id = 42;
 
-function getRoot() {
-    if (!reactRoot) {
-        const container = document.createElement("div");
-        container.id = "vc-notification-container";
+function getStack(position: "top-right" | "bottom-right") {
+    const id = `vc-notification-container-${position}`;
+    let container = document.getElementById(id);
+
+    if (!container) {
+        container = document.createElement("div");
+        container.id = id;
+        container.className = `vc-notification-stack vc-notification-stack-${position}`;
+        container.setAttribute("aria-live", "polite");
+        container.setAttribute("aria-label", "Notifications");
         document.body.append(container);
-        reactRoot = createRoot(container);
     }
-    return reactRoot;
+
+    return container;
 }
 
 export interface NotificationData {
@@ -74,14 +75,31 @@ export interface NotificationData {
 }
 
 function _showNotification(notification: NotificationData, id: number) {
-    const root = getRoot();
+    const position = notification.position ?? Settings.notifications.position;
+    const stack = getStack(position);
+    const item = document.createElement("div");
+    item.className = "vc-notification-stack-item";
+    item.dataset.notificationId = String(id);
+    stack.append(item);
+
+    const root = createRoot(item);
+
     return new Promise<void>(resolve => {
-        root.render(
-            <NotificationComponent key={id} {...notification} onClose={() => {
-                notification.onClose?.();
-                root.render(null);
+        let closed = false;
+        const close = () => {
+            if (closed) return;
+            closed = true;
+            notification.onClose?.();
+
+            queueMicrotask(() => {
+                root.unmount();
+                item.remove();
                 resolve();
-            }} />,
+            });
+        };
+
+        root.render(
+            <NotificationComponent key={id} {...notification} onClose={close} />,
         );
     });
 }
@@ -116,6 +134,6 @@ export async function showNotification(data: NotificationData) {
         n.onclick = onClick;
         n.onclose = onClose;
     } else {
-        NotificationQueue.push(() => _showNotification(data, id++));
+        void _showNotification(data, id++);
     }
 }
