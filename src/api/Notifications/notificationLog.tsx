@@ -56,6 +56,7 @@ export async function persistNotification(notification: NotificationData) {
         // Omit stuff we don't need
         const {
             onClick, onClose, richBody, permanent, noPersist, dismissOnClick,
+            className, position, forceInApp,
             ...pureNotification
         } = notification;
 

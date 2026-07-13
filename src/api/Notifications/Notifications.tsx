@@ -43,6 +43,12 @@ function getRoot() {
 export interface NotificationData {
     title: string;
     body: string;
+    /** Optional class name for custom in-app notification presentation */
+    className?: string;
+    /** Override the global in-app notification position */
+    position?: "top-right" | "bottom-right";
+    /** Always use Vencord's in-app notification, even when native notifications are enabled */
+    forceInApp?: boolean;
     /**
      * Same as body but can be a custom component.
      * Will be used over body if present.
@@ -95,7 +101,7 @@ export async function requestPermission() {
 export async function showNotification(data: NotificationData) {
     persistNotification(data);
 
-    if (shouldBeNative() && await requestPermission()) {
+    if (!data.forceInApp && shouldBeNative() && await requestPermission()) {
         const { title, body, icon, image, onClick = null, onClose = null } = data;
         const n = new Notification(title, {
             body,

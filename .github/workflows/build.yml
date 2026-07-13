@@ -13,6 +13,9 @@ on:
 env:
     FORCE_COLOR: true
 
+permissions:
+    contents: write
+
 jobs:
     Build:
         runs-on: ubuntu-latest
@@ -48,6 +51,28 @@ jobs:
               id: release_values
               run: |
                   echo "release_tag=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+            - name: Upload build artifact
+              uses: actions/upload-artifact@v6
+              with:
+                  name: Vencord-${{ env.release_tag }}
+                  path: dist
+                  if-no-files-found: error
+                  retention-days: 14
+
+            - name: Upload fork DevBuild release
+              if: github.repository != 'Vendicated/Vencord'
+              run: |
+                  if gh release view fork-devbuild >/dev/null 2>&1; then
+                      gh api --method PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/fork-devbuild" -f sha="$GITHUB_SHA" -F force=true
+                      gh release upload fork-devbuild --clobber dist/*
+                      gh release edit fork-devbuild --title "DevBuild $RELEASE_TAG"
+                  else
+                      gh release create fork-devbuild dist/* --target "$GITHUB_SHA" --title "DevBuild $RELEASE_TAG" --notes "Automatically built from the latest main branch commit."
+                  fi
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  RELEASE_TAG: ${{ env.release_tag }}
 
             - name: Upload DevBuild as release
               if: github.repository == 'Vendicated/Vencord'

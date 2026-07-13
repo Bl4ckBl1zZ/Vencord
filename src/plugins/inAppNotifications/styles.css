@@ -1,0 +1,82 @@
+.vc-notification-root.vc-in-app-notification {
+    width: min(360px, calc(100vw - 2rem));
+    min-height: unset;
+    background: var(--background-base-low);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    box-shadow: var(--shadow-high);
+    animation: vc-in-app-notification-enter 180ms ease-out;
+}
+
+.vc-in-app-notification .vc-notification {
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+}
+
+.vc-in-app-notification .vc-notification-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    flex: none;
+}
+
+.vc-in-app-notification .vc-notification-title {
+    overflow: hidden;
+    font-size: 15px;
+    line-height: 20px;
+    text-overflow: ellipsis;
+    text-transform: none;
+    white-space: nowrap;
+}
+
+.vc-in-app-notification .vc-notification-close-btn {
+    flex: none;
+    margin: -4px -4px 0 8px;
+}
+
+.vc-in-app-notification-body {
+    min-width: 0;
+    margin-top: 2px;
+}
+
+.vc-in-app-notification-preview,
+.vc-in-app-notification-context {
+    margin: 0;
+    line-height: 18px;
+}
+
+.vc-in-app-notification-preview {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--text-default);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.vc-in-app-notification-context {
+    overflow: hidden;
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vc-in-app-notification .vc-notification-progressbar {
+    height: 3px;
+    border-radius: 0;
+}
+
+@keyframes vc-in-app-notification-enter {
+    from {
+        opacity: 0;
+        transform: translateX(12px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vc-notification-root.vc-in-app-notification {
+        animation: none;
+    }
+}

@@ -208,6 +208,7 @@ export default definePlugin({
     description: "Temporarily logs deleted and edited messages.",
     tags: ["Chat", "Utility"],
     authors: [Devs.rushii, Devs.Ven, Devs.AutumnVN, Devs.Nickyux, Devs.Kyuuhachi],
+    enabledByDefault: true,
     dependencies: ["MessageUpdaterAPI"],
     settings,
     contextMenus: {

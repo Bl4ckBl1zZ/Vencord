@@ -36,9 +36,12 @@ export default ErrorBoundary.wrap(function NotificationComponent({
     image,
     permanent,
     className,
-    dismissOnClick
-}: NotificationData & { className?: string; }) {
-    const { timeout, position } = useSettings(["notifications.timeout", "notifications.position"]).notifications;
+    dismissOnClick,
+    position
+}: NotificationData) {
+    const notificationSettings = useSettings(["notifications.timeout", "notifications.position"]).notifications;
+    const { timeout } = notificationSettings;
+    const resolvedPosition = position ?? notificationSettings.position;
     const hasFocus = useStateFromStores([WindowStore], () => WindowStore.isFocused());
 
     const [isHover, setIsHover] = useState(false);
@@ -65,7 +68,7 @@ export default ErrorBoundary.wrap(function NotificationComponent({
     return (
         <button
             className={classes("vc-notification-root", className)}
-            style={position === "bottom-right" ? { bottom: "1rem" } : { top: "3rem" }}
+            style={resolvedPosition === "bottom-right" ? { bottom: "1rem" } : { top: "3rem" }}
             onClick={() => {
                 onClick?.();
                 if (dismissOnClick !== false)
